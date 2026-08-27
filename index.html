@@ -48,6 +48,9 @@
   #restart:hover{color:var(--ink-dim);}
   #connect-btn{position:fixed; top:52px; left:26px; z-index:20; font-family:var(--font-mono); font-size:10.5px; letter-spacing:.03em; color:var(--ink-faint); background:rgba(255,255,255,0.06); border:1px solid var(--bubble-border); border-radius:999px; padding:6px 13px; cursor:pointer; transition:border-color .2s ease, color .2s ease;}
   #connect-btn.connected{border-color:var(--gold); color:var(--gold);}
+  #back-btn{position:fixed; top:82px; left:26px; z-index:20; font-family:var(--font-mono); font-size:10.5px; letter-spacing:.03em; color:var(--ink-faint); background:rgba(255,255,255,0.06); border:1px solid var(--bubble-border); border-radius:999px; padding:6px 13px; cursor:pointer; opacity:0; pointer-events:none; transition:opacity .3s ease, border-color .2s ease;}
+  #back-btn.show{opacity:1; pointer-events:auto;}
+  #back-btn:hover{border-color:var(--gold); color:var(--gold);}
   #stage-label{position:fixed; top:22px; right:26px; z-index:20; font-family:var(--font-mono); font-size:11px; letter-spacing:.08em; color:var(--ink-faint); text-transform:uppercase;}
 
   #greeting-wrap{position:fixed; top:16%; left:50%; transform:translateX(-50%); text-align:center; z-index:5; width:90%; max-width:640px; transition:opacity .5s ease, transform .5s ease;}
@@ -69,17 +72,16 @@
   .fade-out{opacity:0 !important; transform:translate(-50%,-58%) !important; pointer-events:none !important;}
 
   #bubble-layer{position:fixed; inset:0; z-index:3;}
-  .bubble{position:absolute; top:0; left:0; padding:8px; border-radius:50%; background:var(--bubble-bg-soft); border:1px solid var(--bubble-border); color:var(--ink); line-height:1.32; text-align:center; word-break:keep-all; overflow:hidden; box-shadow:0 6px 20px rgba(0,0,0,0.35); user-select:none; transition:box-shadow .25s ease, border-color .25s ease, opacity .5s ease;}
+  .bubble{position:absolute; top:0; left:0; padding:10px; border-radius:50%; background:var(--bubble-bg-soft); border:1px solid var(--bubble-border); color:var(--ink); line-height:1.32; text-align:center; word-break:keep-all; overflow:hidden; box-shadow:0 6px 22px rgba(0,0,0,0.38); user-select:none; cursor:pointer; transition:box-shadow .25s ease, border-color .25s ease, opacity .5s ease;}
   .bubble.stale{animation:stale-blink 2.4s ease-in-out infinite;}
   @keyframes stale-blink{
-    0%,100%{ box-shadow:0 6px 20px rgba(0,0,0,0.35); border-color:var(--bubble-border); }
-    50%{ box-shadow:0 6px 20px rgba(0,0,0,0.35), 0 0 22px var(--gold-glow); border-color:var(--gold); }
+    0%,100%{ box-shadow:0 6px 22px rgba(0,0,0,0.38); border-color:var(--bubble-border); }
+    50%{ box-shadow:0 6px 22px rgba(0,0,0,0.38), 0 0 24px var(--gold-glow); border-color:var(--gold); }
   }
-  .bubble.selectable{cursor:pointer;}
-  .bubble.selectable:hover{border-color:rgba(255,255,255,0.6);}
-  .bubble.selected{border-color:var(--gold); box-shadow:0 0 0 1px var(--gold), 0 0 28px var(--gold-glow);}
+  .bubble:hover{border-color:rgba(255,255,255,0.65);}
+  .bubble.selected{border-color:var(--gold); box-shadow:0 0 0 2px var(--gold), 0 0 30px var(--gold-glow);}
   .bubble.selected.stale{animation-play-state:paused;}
-  .badge{position:absolute; top:-9px; left:-9px; width:22px; height:22px; border-radius:50%; background:var(--gold); color:#1b1530; font-family:var(--font-mono); font-size:11px; font-weight:600; display:flex; align-items:center; justify-content:center;}
+  .badge{position:absolute; top:-9px; left:-9px; width:24px; height:24px; border-radius:50%; background:var(--gold); color:#1b1530; font-family:var(--font-mono); font-size:12px; font-weight:600; display:flex; align-items:center; justify-content:center;}
 
   #next-btn{position:fixed; bottom:32px; right:34px; z-index:20; font-family:var(--font-body); font-size:13.5px; letter-spacing:.01em; color:var(--ink); background:rgba(255,255,255,0.06); border:1px solid var(--bubble-border); border-radius:999px; padding:12px 22px; cursor:pointer; opacity:0; transform:translateY(8px); pointer-events:none; transition:opacity .4s ease, transform .4s ease, background .2s ease, border-color .2s ease;}
   #next-btn.show{opacity:1; transform:translateY(0); pointer-events:auto;}
@@ -123,6 +125,9 @@
   #copy-btn:hover{background:rgba(255,255,255,0.14); border-color:var(--gold);}
   #copy-btn.copied{border-color:var(--gold); color:var(--gold);}
   #copy-btn.hidden{display:none;}
+  #extra-btn{display:none; margin:14px auto 0; font-family:var(--font-body); font-size:13px; color:var(--ink); background:rgba(255,255,255,0.07); border:1px solid var(--bubble-border); border-radius:999px; padding:10px 20px; cursor:pointer; transition:border-color .2s ease;}
+  #extra-btn.show{display:block;}
+  #extra-btn:hover{border-color:var(--gold);}
 
   @media (prefers-reduced-motion: reduce){ .bubble{transition:none;} }
 </style>
@@ -133,6 +138,7 @@
 
   <button id="restart">← 처음부터</button>
   <button id="connect-btn">구글 캘린더 연결</button>
+  <button id="back-btn">← 뒤로</button>
   <div id="stage-label">STAGE <span id="stage-num">1</span> / 3</div>
 
   <div id="greeting-wrap">
@@ -142,8 +148,8 @@
   </div>
 
   <div id="instruction-2">
-    <div class="head">이 중에서, 진짜 중요한 세 가지만.</div>
-    <div class="sub">버블을 눌러서 골라줘</div>
+    <div class="head" id="instruction-2-head">이 중에서, 진짜 중요한 세 가지만.</div>
+    <div class="sub" id="instruction-2-sub">버블을 눌러서 골라줘</div>
   </div>
 
   <div id="input-circle-wrap">
@@ -176,16 +182,15 @@
       <div class="msg-box" id="msg-box"></div>
       <button id="copy-btn">문구 복사하기</button>
     </div>
+    <button id="extra-btn">+ 추가로 할 일 배정하기</button>
   </div>
 
 </div>
 
 <script>
 (function(){
-  /* SYNC_EVENTS_START — 채팅에서 "오늘 열어줘"라고 하면 이 배열을 그날 실제 일정으로 갱신해줄게 */
-  let todaysEvents = [
-    { title: "근로장려금 결과 발표", allDay: true }
-  ];
+  /* SYNC_EVENTS_START */
+  let todaysEvents = [];
   /* SYNC_EVENTS_END */
 
   const STORAGE_KEY = 'pending-bubbles';
@@ -199,6 +204,7 @@
   let selectedOrder = [];
   let idCounter = 0;
   let placements = {};
+  let selectionMode = 'big3'; // 'big3' (exactly 3) or 'extra' (1 or more)
 
   const bubbleLayer = document.getElementById('bubble-layer');
   const input = document.getElementById('brain-input');
@@ -209,9 +215,13 @@
   const inputWrap = document.getElementById('input-circle-wrap');
   const hintText = document.getElementById('hint-text');
   const instruction2 = document.getElementById('instruction-2');
+  const instr2Head = document.getElementById('instruction-2-head');
+  const instr2Sub = document.getElementById('instruction-2-sub');
   const stage3 = document.getElementById('stage3');
   const restartBtn = document.getElementById('restart');
   const carryNote = document.getElementById('carry-note');
+  const backBtn = document.getElementById('back-btn');
+  const extraBtn = document.getElementById('extra-btn');
 
   // ---------- Google Calendar OAuth ----------
   const CLIENT_ID = '424662232399-0rubq90508i8a1e11bp59lg866o7gtas.apps.googleusercontent.com';
@@ -231,7 +241,7 @@
       callback: (resp)=>{
         if(resp.error){ console.warn('auth error', resp); connectBtn.textContent='연결 실패 — 다시 시도'; return; }
         accessToken = resp.access_token;
-        try{ sessionStorage.setItem('gcal-token', accessToken); }catch(e){}
+        try{ localStorage.setItem('gcal-token', accessToken); }catch(e){}
         markConnected();
       }
     });
@@ -239,7 +249,7 @@
       tokenClient.requestAccessToken({ prompt: accessToken ? '' : 'consent' });
     });
     try{
-      const saved = sessionStorage.getItem('gcal-token');
+      const saved = localStorage.getItem('gcal-token');
       if(saved){ accessToken = saved; markConnected(); }
     }catch(e){}
   }
@@ -282,9 +292,9 @@
 
   async function loadPending(){
     try{
-      const res = await window.storage.get(STORAGE_KEY, false);
-      if(res && res.value){
-        const list = JSON.parse(res.value);
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(raw){
+        const list = JSON.parse(raw);
         if(Array.isArray(list) && list.length>0){
           list.forEach(item=>addBubble(item.text, false, item.createdAt));
           carryNote.textContent = `어제 못 끝낸 ${list.length}개가 계속 떠 있어`;
@@ -292,12 +302,12 @@
           updateStage1Gate();
         }
       }
-    }catch(e){ /* no stored data yet */ }
+    }catch(e){ console.warn('저장된 데이터 불러오기 실패', e); }
   }
   function persistPending(){
     try{
       const list = bubbles.map(b=>({text:b.text, createdAt:b.createdAt}));
-      window.storage.set(STORAGE_KEY, JSON.stringify(list), false);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
     }catch(e){ console.warn('storage save failed', e); }
   }
 
@@ -310,8 +320,9 @@
     const angle = Math.random()*Math.PI*2;
     const burstSpeed = 1.6 + Math.random()*0.8;
 
-    const r = Math.max(38, Math.min(72, 30 + Math.sqrt(text.length)*7));
-    const fontSize = text.length>16 ? 11.5 : text.length>9 ? 12.5 : 13.5;
+    // bigger, more visible bubbles
+    const r = Math.max(58, Math.min(112, 48 + Math.sqrt(text.length)*10));
+    const fontSize = text.length>16 ? 13.5 : text.length>9 ? 14.5 : 16;
 
     const daysOld = Math.floor((Date.now()-new Date(created).getTime())/86400000);
     const isStale = daysOld >= STALE_DAYS;
@@ -325,7 +336,9 @@
     el.style.display='flex'; el.style.alignItems='center'; el.style.justifyContent='center';
     bubbleLayer.appendChild(el);
 
-    bubbles.push({ id, text, el, createdAt:created, x:cx, y:cy, vx:Math.cos(angle)*burstSpeed, vy:Math.sin(angle)*burstSpeed, r, selected:false });
+    const bubbleObj = { id, text, el, createdAt:created, x:cx, y:cy, vx:Math.cos(angle)*burstSpeed, vy:Math.sin(angle)*burstSpeed, r, selected:false };
+    bubbles.push(bubbleObj);
+    el.addEventListener('click', ()=>toggleSelect(bubbleObj));
     updateStage1Gate();
   }
 
@@ -354,6 +367,132 @@
   }
   requestAnimationFrame(tick);
 
+  // ---------- selection ----------
+  function maxForMode(){ return selectionMode==='big3' ? 3 : 8; }
+
+  function toggleSelect(b){
+    if(stage===1) return; // selection only meaningful once past stage 1 view, but keep silent no-op
+    if(!b.selected && selectedOrder.length>=maxForMode()) return;
+    b.selected = !b.selected;
+    if(b.selected){
+      selectedOrder.push(b.id);
+      b.el.classList.add('selected');
+      const badge=document.createElement('div'); badge.className='badge'; badge.textContent=selectedOrder.length;
+      b.el.appendChild(badge);
+    } else {
+      selectedOrder = selectedOrder.filter(id=>id!==b.id);
+      b.el.classList.remove('selected');
+      const badge=b.el.querySelector('.badge'); if(badge) badge.remove();
+      delete placements[b.id];
+      selectedOrder.forEach((id,i)=>{ const bb=bubbles.find(x=>x.id===id); const bd=bb.el.querySelector('.badge'); if(bd) bd.textContent=i+1; });
+    }
+    updateSelectionUI();
+  }
+
+  function updateSelectionUI(){
+    if(selectionMode==='big3'){
+      counterEl.textContent = `선택 ${selectedOrder.length} / 3`;
+      if(selectedOrder.length===3){ nextBtn.textContent='시간 배정하기 →'; nextBtn.classList.add('show'); }
+      else nextBtn.classList.remove('show');
+    } else {
+      counterEl.textContent = `선택 ${selectedOrder.length}개`;
+      if(selectedOrder.length>=1){ nextBtn.textContent='시간 배정하기 →'; nextBtn.classList.add('show'); }
+      else nextBtn.classList.remove('show');
+    }
+  }
+
+  // ---------- stage transitions ----------
+  nextBtn.addEventListener('click', async ()=>{
+    if(stage===1 && bubbles.length>=3) goToStage2();
+    else if(stage===2){
+      const need = selectionMode==='big3' ? selectedOrder.length===3 : selectedOrder.length>=1;
+      if(need) await goToStage3();
+    }
+  });
+
+  function goToStage2(){
+    stage=2; stageNum.textContent='2';
+    selectionMode='big3';
+    greetingWrap.classList.add('fade-out');
+    inputWrap.classList.add('fade-out');
+    hintText.style.opacity='0';
+    instr2Head.textContent = '이 중에서, 진짜 중요한 세 가지만.';
+    instr2Sub.textContent = '버블을 눌러서 골라줘';
+    instruction2.classList.add('active');
+    nextBtn.classList.remove('show');
+    counterEl.classList.add('show');
+    updateSelectionUI();
+    backBtn.textContent = '← 브레인덤프로';
+    backBtn.onclick = goBackToStage1;
+    backBtn.classList.add('show');
+  }
+
+  function goBackToStage1(){
+    stage=1; stageNum.textContent='1';
+    greetingWrap.classList.remove('fade-out');
+    inputWrap.classList.remove('fade-out');
+    hintText.style.opacity='1';
+    instruction2.classList.remove('active');
+    counterEl.classList.remove('show');
+    backBtn.classList.remove('show');
+    updateStage1Gate();
+    input.focus();
+  }
+
+  async function goToStage3(){
+    stage=3; stageNum.textContent='3';
+    instruction2.classList.remove('active');
+    counterEl.classList.remove('show');
+    nextBtn.classList.remove('show');
+    bubbleLayer.style.transition='opacity .5s ease';
+    bubbleLayer.style.opacity='0';
+    setTimeout(()=>{ if(stage===3) bubbleLayer.style.display='none'; }, 500);
+    await fetchTodaysEvents();
+    buildTimeline();
+    stage3.classList.add('active');
+    backBtn.textContent = '← Big 3로';
+    backBtn.onclick = goBackToStage2;
+    backBtn.classList.add('show');
+    extraBtn.classList.remove('show');
+    document.getElementById('sent-msg').classList.remove('show');
+  }
+
+  function goBackToStage2(){
+    stage=2; stageNum.textContent='2';
+    stage3.classList.remove('active');
+    bubbleLayer.style.display='block';
+    requestAnimationFrame(()=>{ bubbleLayer.style.opacity='1'; });
+    requestAnimationFrame(tick);
+    instr2Head.textContent = selectionMode==='big3' ? '이 중에서, 진짜 중요한 세 가지만.' : '추가로, 오늘 배정할 것들을 골라줘';
+    instr2Sub.textContent = '버블을 눌러서 골라줘';
+    instruction2.classList.add('active');
+    counterEl.classList.add('show');
+    updateSelectionUI();
+    backBtn.textContent = '← 브레인덤프로';
+    backBtn.onclick = goBackToStage1;
+  }
+
+  function startExtraRound(){
+    selectionMode='extra';
+    selectedOrder = [];
+    // clear any lingering selected styling from finished items (they're already removed from bubbles anyway)
+    bubbles.forEach(b=>{
+      if(b.selected){ b.selected=false; b.el.classList.remove('selected'); const bd=b.el.querySelector('.badge'); if(bd) bd.remove(); }
+    });
+    goBackToStage2();
+  }
+  extraBtn.addEventListener('click', startExtraRound);
+
+  // ---------- stage 3: timeline ----------
+  const timelineEl = document.getElementById('timeline');
+  const timelineWrap = document.getElementById('timeline-wrap');
+  const trayItemsEl = document.getElementById('tray-items');
+  const confirmBtn = document.getElementById('confirm-btn');
+
+  function minToLabel(m){
+    const h = Math.floor(m/60), mm = m%60;
+    return String(h).padStart(2,'0')+':'+String(mm).padStart(2,'0');
+  }
   function pad2(n){ return String(n).padStart(2,'0'); }
 
   async function fetchTodaysEvents(){
@@ -380,67 +519,6 @@
       console.warn('오늘 일정 불러오기 실패', e);
       todaysEvents = [];
     }
-  }
-
-  nextBtn.addEventListener('click', async ()=>{
-    if(stage===1 && bubbles.length>=3) goToStage2();
-    else if(stage===2 && selectedOrder.length===3) await goToStage3();
-  });
-
-  function goToStage2(){
-    stage=2; stageNum.textContent='2';
-    greetingWrap.classList.add('fade-out');
-    inputWrap.classList.add('fade-out');
-    hintText.style.opacity='0';
-    instruction2.classList.add('active');
-    nextBtn.classList.remove('show');
-    counterEl.classList.add('show');
-    bubbles.forEach(b=>{
-      b.el.classList.add('selectable');
-      b.el.addEventListener('click', ()=>toggleSelect(b));
-    });
-  }
-
-  function toggleSelect(b){
-    if(!b.selected && selectedOrder.length>=3) return;
-    b.selected = !b.selected;
-    if(b.selected){
-      selectedOrder.push(b.id);
-      b.el.classList.add('selected');
-      const badge=document.createElement('div'); badge.className='badge'; badge.textContent=selectedOrder.length;
-      b.el.appendChild(badge);
-    } else {
-      selectedOrder = selectedOrder.filter(id=>id!==b.id);
-      b.el.classList.remove('selected');
-      const badge=b.el.querySelector('.badge'); if(badge) badge.remove();
-      selectedOrder.forEach((id,i)=>{ const bb=bubbles.find(x=>x.id===id); const bd=bb.el.querySelector('.badge'); if(bd) bd.textContent=i+1; });
-    }
-    counterEl.textContent = `선택 ${selectedOrder.length} / 3`;
-    if(selectedOrder.length===3){ nextBtn.textContent='시간 배정하기 →'; nextBtn.classList.add('show'); }
-    else nextBtn.classList.remove('show');
-  }
-
-  async function goToStage3(){
-    stage=3; stageNum.textContent='3';
-    instruction2.classList.remove('active');
-    counterEl.classList.remove('show');
-    nextBtn.classList.remove('show');
-    bubbleLayer.style.transition='opacity .5s ease';
-    bubbleLayer.style.opacity='0';
-    setTimeout(()=>{ bubbleLayer.style.display='none'; }, 500);
-    await fetchTodaysEvents();
-    buildTimeline();
-    stage3.classList.add('active');
-  }
-
-  const timelineEl = document.getElementById('timeline');
-  const timelineWrap = document.getElementById('timeline-wrap');
-  const trayItemsEl = document.getElementById('tray-items');
-  const confirmBtn = document.getElementById('confirm-btn');
-
-  function minToLabel(m){
-    const h = Math.floor(m/60), mm = m%60;
-    return String(h).padStart(2,'0')+':'+String(mm).padStart(2,'0');
   }
 
   function buildTimeline(){
@@ -493,7 +571,6 @@
     }
 
     trayItemsEl.innerHTML='';
-    placements = {};
     selectedOrder.forEach((id,i)=>{
       const b = bubbles.find(x=>x.id===id);
       const item = document.createElement('div');
@@ -504,7 +581,7 @@
       makeDraggable(item, id, b.text, i+1);
     });
 
-    confirmBtn.disabled = true;
+    updateConfirmState();
   }
 
   function escapeHtml(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
@@ -595,6 +672,12 @@
         renderPlacedBlock(id, text, num);
       });
     }
+
+    // restore an existing placement (e.g., when navigating back and forth) without requiring re-drag
+    if(placements[id]){
+      sourceEl.classList.add('placed');
+      renderPlacedBlock(id, text, num);
+    }
   }
 
   function updateConfirmState(){
@@ -650,7 +733,10 @@
       }
     }
 
-    bubbles = bubbles.filter(bb=>!ids.includes(bb.id));
+    const doneIds = items.map(it=>it.id);
+    bubbles = bubbles.filter(bb=>!doneIds.includes(bb.id));
+    doneIds.forEach(id=>{ delete placements[id]; });
+    selectedOrder = selectedOrder.filter(id=>!doneIds.includes(id));
     persistPending();
 
     const okCount = results.filter(r=>r.ok).length;
@@ -662,7 +748,12 @@
       : `${okCount}/${results.length}개만 등록됐어 — 아래에서 실패한 항목 확인`;
     document.getElementById('sent-msg').classList.add('show');
     confirmBtn.textContent = '구글 캘린더에 반영하기';
-    if(okCount < results.length){ confirmBtn.disabled = false; }
+
+    if(okCount < results.length){
+      confirmBtn.disabled = false;
+    } else if(bubbles.length > 0){
+      extraBtn.classList.add('show');
+    }
   });
 
   document.getElementById('copy-btn').addEventListener('click', ()=>{
@@ -678,7 +769,7 @@
 
   restartBtn.addEventListener('click', ()=>{
     bubbles.forEach(b=>b.el.remove());
-    bubbles=[]; selectedOrder=[]; idCounter=0; stage=1; placements={};
+    bubbles=[]; selectedOrder=[]; idCounter=0; stage=1; placements={}; selectionMode='big3';
     stageNum.textContent='1';
     greetingWrap.classList.remove('fade-out');
     inputWrap.classList.remove('fade-out');
@@ -690,6 +781,8 @@
     nextBtn.classList.remove('show');
     counterEl.classList.remove('show');
     counterEl.textContent='선택 0 / 3';
+    backBtn.classList.remove('show');
+    extraBtn.classList.remove('show');
     document.getElementById('sent-msg').classList.remove('show');
     input.value=''; input.focus();
     requestAnimationFrame(tick);
