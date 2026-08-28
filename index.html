@@ -1,0 +1,1387 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>아펠리온</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%230b6fe0'/%3E%3Ccircle cx='32' cy='32' r='11' fill='white'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css">
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+  :root{
+    --ink:#000000;
+    --ink-dim:#000000;
+    --ink-faint:#000000;
+    --bubble-bg:#3f9bee;
+    --bubble-bg-soft:#3f9bee;
+    --bubble-border:#0b6fe0;
+    --gold:#0b6fe0;
+    --gold-glow:rgba(11,111,224,0.38);
+    --busy-bg:rgba(148,163,184,0.22);
+    --busy-border:rgba(100,116,139,0.4);
+    --panel:#dcedfd;
+    --panel-hover:#c5e2fa;
+    --panel-border:rgba(11,111,224,0.55);
+    --shadow-soft:0 6px 16px rgba(11,111,224,0.18);
+    --font-display:'Gowun Batang', serif;
+    --font-body:'PretendardVariable', -apple-system, 'Malgun Gothic', sans-serif;
+    --font-mono:'JetBrains Mono', monospace;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  html,body{
+    width:100%; height:100%; overflow:hidden;
+    font-family:var(--font-body);
+    color:var(--ink);
+    background:#ffffff;
+    position:relative;
+  }
+  #deco{position:fixed; inset:0; z-index:1; pointer-events:none; overflow:hidden;}
+  #login-gate{position:fixed; inset:0; z-index:100; background:rgba(255,255,255,0.88); backdrop-filter:blur(2px); display:flex; align-items:center; justify-content:center;}
+  .gate-card{text-align:center; padding:56px 48px; max-width:400px; width:88vw;}
+  .gate-mark{width:52px; height:52px; border-radius:50%; background:var(--gold); margin:0 auto 26px;}
+  .gate-title{font-family:var(--font-display); font-weight:700; font-size:clamp(28px,4.2vw,38px); color:var(--ink); margin-bottom:16px; letter-spacing:-0.01em;}
+  .gate-sub{font-size:14px; color:var(--ink-dim); margin-bottom:40px; line-height:1.65; max-width:260px; margin-left:auto; margin-right:auto;}
+  #gate-connect-btn{font-family:var(--font-body); font-size:14.5px; color:#ffffff; background:var(--gold); border:none; border-radius:999px; padding:15px 36px; cursor:pointer; box-shadow:var(--shadow-soft); transition:transform .2s ease, box-shadow .2s ease, opacity .2s ease; letter-spacing:.01em;}
+  #gate-connect-btn:hover{transform:translateY(-1px); box-shadow:0 8px 22px var(--gold-glow);}
+  #gate-connect-btn:disabled{opacity:.5; pointer-events:none;}
+  #app{position:relative; z-index:2; width:100%; height:100%;}
+
+  #restart{position:fixed; top:22px; left:26px; z-index:20; font-size:12.5px; letter-spacing:.02em; color:var(--ink-faint); background:none; border:none; cursor:pointer; font-family:var(--font-body); transition:color .2s ease;}
+  #restart:hover{color:var(--ink-dim);}
+  #connect-btn{position:fixed; top:52px; left:26px; z-index:20; font-family:var(--font-mono); font-size:10.5px; letter-spacing:.03em; color:var(--ink-faint); background:var(--panel); border:1px solid var(--panel-border); border-radius:999px; padding:6px 13px; cursor:pointer; transition:border-color .2s ease, color .2s ease;}
+  #connect-btn.connected{border-color:var(--gold); color:var(--gold);}
+  #back-btn{position:fixed; top:82px; left:26px; z-index:20; font-family:var(--font-mono); font-size:10.5px; letter-spacing:.03em; color:var(--ink-faint); background:var(--panel); border:1px solid var(--panel-border); border-radius:999px; padding:6px 13px; cursor:pointer; opacity:0; pointer-events:none; transition:opacity .3s ease, border-color .2s ease;}
+  #back-btn.show{opacity:1; pointer-events:auto;}
+  #back-btn:hover{border-color:var(--gold); color:var(--gold);}
+  #stage-label{position:fixed; top:22px; right:26px; z-index:20; font-family:var(--font-mono); font-size:11px; letter-spacing:.08em; color:var(--ink-faint); text-transform:uppercase;}
+
+  #greeting-wrap{position:fixed; top:13%; left:50%; transform:translateX(-50%); text-align:center; z-index:5; width:90%; max-width:640px; transition:opacity .5s ease, transform .5s ease;}
+  #greeting{font-family:var(--font-display); font-weight:700; font-size:clamp(24px,4vw,34px); color:var(--ink);}
+  #subgreeting{margin-top:14px; font-size:clamp(13px,1.6vw,15px); color:var(--ink-dim); font-weight:300; letter-spacing:.01em;}
+  #carry-note{margin-top:8px; font-size:11.5px; color:var(--gold); opacity:0; transition:opacity .4s ease;}
+  #carry-note.show{opacity:.85;}
+
+  #instruction-2{position:fixed; top:12%; left:50%; transform:translateX(-50%); text-align:center; z-index:5; width:90%; max-width:640px; opacity:0; pointer-events:none; transition:opacity .5s ease;}
+  #instruction-2 .head{font-family:var(--font-display); font-weight:700; font-size:clamp(20px,3.4vw,28px); color:var(--ink);}
+  #instruction-2 .sub{margin-top:8px; font-family:var(--font-mono); font-size:12px; letter-spacing:.06em; color:var(--gold);}
+  #instruction-2.active{opacity:1; pointer-events:auto;}
+
+  #input-circle-wrap{position:fixed; top:42%; left:50%; transform:translate(-50%,-50%); z-index:6; transition:opacity .5s ease, transform .5s ease;}
+  #input-ring{width:250px; height:250px; border-radius:50%; border:1px solid var(--bubble-border); background:radial-gradient(circle at 50% 40%, rgba(79,167,224,0.10), rgba(79,167,224,0.02)); display:flex; align-items:center; justify-content:center; box-shadow:0 0 50px rgba(79,167,224,0.12);}
+  #brain-input{width:190px; text-align:center; background:none; border:none; outline:none; color:var(--ink); font-family:var(--font-body); font-size:15.5px; caret-color:var(--gold);}
+  #brain-input::placeholder{color:var(--ink-faint);}
+  #hint-text{position:fixed; top:calc(42% + 150px); left:50%; transform:translateX(-50%); z-index:6; font-size:11.5px; color:var(--ink-faint); letter-spacing:.02em; transition:opacity .4s ease;}
+  .fade-out{opacity:0 !important; transform:translate(-50%,-58%) !important; pointer-events:none !important;}
+
+  #bubble-layer{position:fixed; inset:0; z-index:3; pointer-events:none;}
+  .bubble{position:absolute; top:0; left:0; padding:10px; border-radius:50%; background:var(--bubble-bg-soft); border:2px solid var(--bubble-border); color:#ffffff; line-height:1.32; text-align:center; word-break:keep-all; box-shadow:var(--shadow-soft); user-select:none; cursor:pointer; pointer-events:auto; transition:box-shadow .25s ease, border-color .25s ease, opacity .5s ease;}
+  .bubble.stale{animation:stale-blink 2.4s ease-in-out infinite;}
+  @keyframes stale-blink{
+    0%,100%{ box-shadow:var(--shadow-soft); border-color:var(--bubble-border); }
+    50%{ box-shadow:var(--shadow-soft), 0 0 22px var(--gold-glow); border-color:var(--gold); }
+  }
+  .bubble:hover{border-color:#ffffff;}
+  .bubble.selected{border-color:#ffffff; box-shadow:0 0 0 2px #ffffff, 0 0 22px rgba(255,255,255,0.6);}
+  .bubble.selected.stale{animation-play-state:paused;}
+  .bubble.frozen{border-color:#ffb020; box-shadow:0 0 0 2px #ffb020, var(--shadow-soft);}
+  .bubble.frozen.stale{animation-play-state:paused;}
+  .bubble-action{position:absolute; width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; cursor:pointer; z-index:4; box-shadow:0 2px 8px rgba(70,120,170,0.25);}
+  .bubble-action.delete{top:-8px; right:-8px; background:#e2645a; color:#fff;}
+  .bubble-text{display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; max-width:100%;}
+  .bubble-action.edit{bottom:-8px; right:-8px; background:#ffffff; border:1px solid var(--panel-border); color:var(--ink);}
+  .bubble-action.unlink{bottom:-8px; left:-8px; background:#ffffff; border:1px solid var(--gold); color:var(--gold); font-size:10px;}
+  .bubble-edit-input{width:80%; background:transparent; border:none; border-bottom:1px solid #ffffff; color:#ffffff; text-align:center; font-family:var(--font-body); font-size:inherit; outline:none;}
+  .badge{position:absolute; top:-9px; left:-9px; width:24px; height:24px; border-radius:50%; background:#ffffff; color:var(--gold); font-family:var(--font-mono); font-size:12px; font-weight:600; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 6px rgba(11,111,224,0.35);}
+
+  #next-btn{position:fixed; bottom:32px; right:34px; z-index:20; font-family:var(--font-body); font-size:13.5px; letter-spacing:.01em; color:#ffffff; background:var(--gold); border:none; border-radius:999px; padding:12px 22px; cursor:pointer; opacity:0; transform:translateY(8px); pointer-events:none; box-shadow:var(--shadow-soft); transition:opacity .4s ease, transform .4s ease, background .2s ease, box-shadow .2s ease;}
+  #next-btn.show{opacity:1; transform:translateY(0); pointer-events:auto;}
+  #next-btn:hover{background:#0a5fc4; box-shadow:0 8px 22px var(--gold-glow);}
+  #counter{position:fixed; bottom:36px; left:34px; z-index:20; font-family:var(--font-mono); font-size:12px; color:var(--ink-faint); opacity:0; transition:opacity .4s ease;}
+
+  /* ---------- note wall (free placement) ---------- */
+  #note-layer{position:fixed; inset:0; z-index:2; pointer-events:none; transition:opacity .5s ease;}
+  #tether-svg{position:fixed; inset:0; z-index:2; pointer-events:none;}
+  .note-card{position:absolute; width:150px; min-height:64px; background:#fff9e0; border:1px solid #e8d98a; border-radius:6px; padding:10px 10px 26px; box-shadow:0 3px 10px rgba(0,0,0,0.12); cursor:pointer; font-size:12px; line-height:1.4; color:var(--ink); pointer-events:auto;}
+  .note-card .note-preview{display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; white-space:pre-wrap; word-break:break-word;}
+  .note-card .note-actions{position:absolute; bottom:4px; right:6px; display:flex; gap:6px;}
+  .note-card .note-actions button{border:none; background:none; font-size:13px; cursor:pointer; padding:2px;}
+  .note-card.linked{border-color:var(--gold); box-shadow:0 0 0 2px var(--gold), 0 3px 10px rgba(0,0,0,0.12);}
+  .note-add-prompt{position:fixed; width:34px; height:34px; border-radius:50%; background:var(--gold); color:#fff; border:none; font-size:18px; line-height:1; cursor:pointer; z-index:50; box-shadow:var(--shadow-soft); transform:translate(-50%,-50%); animation:prompt-pop .18s ease;}
+  @keyframes prompt-pop{ from{ transform:translate(-50%,-50%) scale(0.5); opacity:0; } to{ transform:translate(-50%,-50%) scale(1); opacity:1; } }
+
+  #link-banner{position:fixed; top:118px; left:190px; right:26px; z-index:25; text-align:center; background:var(--gold); color:#fff; font-size:12.5px; padding:9px 14px; border-radius:999px; display:none; box-shadow:var(--shadow-soft);}
+  #link-banner.show{display:block;}
+  #link-cancel{text-decoration:underline; cursor:pointer;}
+
+  #note-modal{position:fixed; inset:0; z-index:60; background:rgba(0,0,0,0.35); display:none; align-items:center; justify-content:center;}
+  #note-modal.show{display:flex;}
+  .note-modal-card{width:min(480px,86vw); background:#fff9e0; border:1px solid #e8d98a; border-radius:14px; padding:18px; box-shadow:0 12px 40px rgba(0,0,0,0.25);}
+  #note-modal-text{width:100%; min-height:220px; background:transparent; border:none; outline:none; resize:vertical; font-family:var(--font-body); font-size:14px; color:var(--ink); line-height:1.6;}
+  .note-modal-actions{display:flex; justify-content:flex-end; margin-top:8px;}
+  #note-modal-close{font-family:var(--font-body); font-size:13px; color:#ffffff; background:var(--gold); border:none; border-radius:999px; padding:9px 20px; cursor:pointer;}
+
+  /* ---------- onboarding ---------- */
+  #onboarding{position:fixed; inset:0; z-index:90; background:rgba(0,0,0,0.4); display:none; align-items:center; justify-content:center;}
+  #onboarding.show{display:flex;}
+  .onboarding-card{width:min(420px,88vw); background:#ffffff; border-radius:18px; padding:30px 26px; box-shadow:0 20px 60px rgba(0,0,0,0.3); text-align:left;}
+  .onboarding-title{font-family:var(--font-display); font-weight:700; font-size:20px; color:var(--ink); margin-bottom:18px; text-align:center;}
+  .onboarding-row{display:flex; gap:12px; align-items:flex-start; font-size:13.5px; color:var(--ink-dim); line-height:1.5; margin-bottom:14px;}
+  .onboarding-num{flex-shrink:0; width:22px; height:22px; border-radius:50%; background:var(--gold); color:#fff; font-family:var(--font-mono); font-size:12px; display:flex; align-items:center; justify-content:center;}
+  #onboarding-close{display:block; width:100%; margin-top:12px; font-family:var(--font-body); font-size:14px; color:#fff; background:var(--gold); border:none; border-radius:999px; padding:12px; cursor:pointer;}
+  #onboarding-dismiss{text-align:center; margin-top:12px; font-size:12px; color:var(--ink-faint); text-decoration:underline; cursor:pointer;}
+  #counter.show{opacity:1;}
+
+  #stage3{position:fixed; inset:0; z-index:8; display:flex; flex-direction:column; align-items:center; opacity:0; pointer-events:none; transition:opacity .6s ease; padding:70px 24px 24px;}
+  #stage3.active{opacity:1; pointer-events:auto;}
+  #stage3 .head{font-family:var(--font-display); font-weight:700; font-size:clamp(18px,2.8vw,24px); color:var(--ink); margin-bottom:4px; text-align:center;}
+  #stage3 .subhead{font-size:11.5px; color:var(--ink-faint); margin-bottom:18px; text-align:center; font-family:var(--font-mono); letter-spacing:.04em;}
+
+  #planner{display:flex; gap:22px; width:100%; max-width:820px; flex:1; min-height:0;}
+  #tray{width:190px; display:flex; flex-direction:column; gap:12px; flex-shrink:0;}
+  #tray .tray-label{font-size:11px; color:var(--ink-faint); font-family:var(--font-mono); letter-spacing:.06em; margin-bottom:2px;}
+  #cal-select{width:100%; padding:9px 10px; border-radius:10px; background:var(--panel); border:1px solid var(--panel-border); color:var(--ink); font-family:var(--font-body); font-size:12.5px; cursor:pointer;}
+  .tray-item{padding:12px 14px; border-radius:14px; background:var(--gold); color:#ffffff; border:2px dashed rgba(255,255,255,0.55); font-size:13px; line-height:1.4; word-break:keep-all; cursor:grab; user-select:none; touch-action:none; box-shadow:var(--shadow-soft);}
+  .tray-item .num{font-family:var(--font-mono); font-size:11px; color:#ffffff; font-weight:700; margin-right:6px;}
+  .tray-item.placed{opacity:.25; pointer-events:none;}
+
+  #timeline-wrap{flex:1; position:relative; overflow-y:auto; border-radius:16px; background:rgba(11,111,224,0.06); border:1px solid var(--panel-border);}
+  #timeline{position:relative; width:100%;}
+  .hour-line{position:absolute; left:52px; right:10px; border-top:1px solid rgba(60,120,170,0.14);}
+  .hour-label{position:absolute; left:10px; font-family:var(--font-mono); font-size:10.5px; color:var(--ink-faint); transform:translateY(-50%);}
+  .busy-block{position:absolute; left:56px; right:10px; background:#e2e8f0; border:1px solid #94a3b8; border-radius:8px; padding:4px 8px; font-size:11px; color:#475569; overflow:hidden;}
+  .placed-block{position:absolute; left:56px; right:10px; border-radius:10px; background:var(--gold); border:2px solid #ffffff; padding:6px 10px; font-size:12px; color:#ffffff; cursor:grab; touch-action:none; box-shadow:0 4px 14px rgba(11,111,224,0.35);}
+  .placed-block .title{font-weight:500;}
+  .placed-block .time{font-family:var(--font-mono); font-size:10px; color:rgba(255,255,255,0.85); margin-top:2px;}
+  .dur-controls{position:absolute; right:6px; top:6px; display:flex; gap:3px;}
+  .dur-btn{width:16px; height:16px; border-radius:50%; background:#ffffff; border:none; color:var(--gold); font-size:10px; line-height:1; cursor:pointer; font-weight:700;}
+
+  #empty-note{position:absolute; top:10px; left:56px; right:10px; font-size:11.5px; color:var(--ink-faint);}
+
+  #confirm-btn{margin-top:20px; font-family:var(--font-body); font-size:14px; color:#ffffff; background:var(--gold); border:none; border-radius:999px; padding:13px 28px; cursor:pointer; letter-spacing:.01em; transition:transform .2s ease, box-shadow .2s ease, opacity .2s ease;}
+  #confirm-btn:hover{transform:translateY(-1px); box-shadow:0 8px 22px var(--gold-glow);}
+  #confirm-btn:disabled{opacity:.3; pointer-events:none;}
+  #sent-msg{margin-top:16px; width:100%; max-width:520px; opacity:0; transition:opacity .4s ease;}
+  #sent-msg.show{opacity:1;}
+  #sent-msg .note{font-size:12px; color:var(--ink-dim); margin-bottom:8px; text-align:center;}
+  #sent-msg .msg-box{background:var(--panel); border:1px solid var(--panel-border); border-radius:12px; padding:12px 14px; font-family:var(--font-mono); font-size:11.5px; color:var(--ink); white-space:pre-wrap; text-align:left; line-height:1.6;}
+  #copy-btn{display:block; margin:10px auto 0; font-family:var(--font-body); font-size:12.5px; color:var(--ink); background:var(--panel); border:1px solid var(--panel-border); border-radius:999px; padding:8px 18px; cursor:pointer; transition:background .2s ease, border-color .2s ease;}
+  #copy-btn:hover{background:var(--panel-hover); border-color:var(--gold);}
+  #copy-btn.copied{border-color:var(--gold); color:var(--gold);}
+  #copy-btn.hidden{display:none;}
+  #extra-btn{display:none; margin:14px auto 0; font-family:var(--font-body); font-size:13px; color:var(--ink); background:var(--panel); border:1px solid var(--panel-border); border-radius:999px; padding:10px 20px; cursor:pointer; transition:border-color .2s ease;}
+  #extra-btn.show{display:block;}
+  #extra-btn:hover{border-color:var(--gold);}
+
+  @media (prefers-reduced-motion: reduce){ .bubble{transition:none;} }
+</style>
+</head>
+<body>
+<div id="deco">
+  <svg width="100%" height="100%" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+    <!-- bottom-left overlapping ring cluster -->
+    <g opacity="0.9">
+      <circle cx="70" cy="760" r="150" fill="none" stroke="#0b6fe0" stroke-width="34" opacity="0.14"/>
+      <circle cx="190" cy="700" r="130" fill="#3f9bee" opacity="0.10"/>
+      <circle cx="230" cy="800" r="110" fill="none" stroke="#0b6fe0" stroke-width="2" opacity="0.30"/>
+      <circle cx="150" cy="830" r="70" fill="#0b6fe0" opacity="0.08"/>
+    </g>
+    <!-- top-right overlapping ring cluster -->
+    <g opacity="0.9">
+      <circle cx="1330" cy="90" r="120" fill="none" stroke="#0b6fe0" stroke-width="28" opacity="0.14"/>
+      <circle cx="1250" cy="150" r="95" fill="#3f9bee" opacity="0.10"/>
+      <circle cx="1370" cy="180" r="70" fill="none" stroke="#0b6fe0" stroke-width="2" opacity="0.30"/>
+      <circle cx="1200" cy="70" r="10" fill="#0b6fe0" opacity="0.35"/>
+      <circle cx="1120" cy="120" r="6" fill="#0b6fe0" opacity="0.3"/>
+    </g>
+    <!-- small scattered accent dots -->
+    <circle cx="60" cy="120" r="8" fill="#0b6fe0" opacity="0.25"/>
+    <circle cx="110" cy="90" r="4" fill="#0b6fe0" opacity="0.3"/>
+    <circle cx="1380" cy="740" r="14" fill="none" stroke="#0b6fe0" stroke-width="2" opacity="0.3"/>
+    <circle cx="1340" cy="800" r="6" fill="#0b6fe0" opacity="0.3"/>
+    <!-- dot grid, top-left -->
+    <g opacity="0.35">
+      <circle cx="40" cy="40" r="2.5" fill="#0b6fe0"/><circle cx="56" cy="40" r="2.5" fill="#0b6fe0"/><circle cx="72" cy="40" r="2.5" fill="#0b6fe0"/>
+      <circle cx="40" cy="56" r="2.5" fill="#0b6fe0"/><circle cx="56" cy="56" r="2.5" fill="#0b6fe0"/><circle cx="72" cy="56" r="2.5" fill="#0b6fe0"/>
+    </g>
+    <!-- dot grid, bottom-right -->
+    <g opacity="0.35">
+      <circle cx="1370" cy="860" r="2.5" fill="#0b6fe0"/><circle cx="1386" cy="860" r="2.5" fill="#0b6fe0"/><circle cx="1402" cy="860" r="2.5" fill="#0b6fe0"/>
+      <circle cx="1370" cy="876" r="2.5" fill="#0b6fe0"/><circle cx="1386" cy="876" r="2.5" fill="#0b6fe0"/><circle cx="1402" cy="876" r="2.5" fill="#0b6fe0"/>
+    </g>
+  </svg>
+</div>
+<div id="login-gate">
+  <div class="gate-card">
+    <div class="gate-mark"></div>
+    <div class="gate-title">아펠리온</div>
+    <div class="gate-sub">Google 계정으로 시작하면, 어느 기기에서든 이어갈 수 있어</div>
+    <button id="gate-connect-btn" disabled>불러오는 중...</button>
+  </div>
+</div>
+<div id="app">
+
+  <button id="restart">↺ 처음 화면으로</button>
+  <button id="connect-btn">구글 캘린더 연결</button>
+  <button id="back-btn">← 뒤로</button>
+  <div id="stage-label">STAGE <span id="stage-num">1</span> / 3</div>
+
+  <div id="greeting-wrap">
+    <div id="greeting"></div>
+    <div id="subgreeting">오늘 머릿속에 있는 걸 다 꺼내봐. 순서는 상관없어.</div>
+    <div id="carry-note"></div>
+  </div>
+
+  <div id="instruction-2">
+    <div class="head" id="instruction-2-head">이 중에서, 진짜 중요한 세 가지만.</div>
+    <div class="sub" id="instruction-2-sub">버블을 눌러서 골라줘</div>
+  </div>
+
+  <div id="input-circle-wrap">
+    <div id="input-ring">
+      <input id="brain-input" type="text" placeholder="생각나는 대로" autocomplete="off" />
+    </div>
+  </div>
+  <div id="hint-text">Enter를 누르면 풍선처럼 떠올라</div>
+
+  <div id="bubble-layer"></div>
+
+  <svg id="tether-svg"></svg>
+  <div id="note-layer"></div>
+  <div id="link-banner">연결할 할일 버블을 눌러줘 · <span id="link-cancel">취소</span></div>
+
+  <div id="note-modal">
+    <div class="note-modal-card">
+      <textarea id="note-modal-text"></textarea>
+      <div class="note-modal-actions">
+        <button id="note-modal-close">닫기</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="onboarding">
+    <div class="onboarding-card">
+      <div class="onboarding-title">아펠리온 사용법</div>
+      <div class="onboarding-row"><span class="onboarding-num">1</span>가운데 원에 생각나는 대로 적고 Enter — 풍선처럼 떠오른 할일 버블이 돼</div>
+      <div class="onboarding-row"><span class="onboarding-num">2</span>버블 없는 빈 곳을 우클릭하면 + 버튼이 떠 — 누르면 그 자리에 노트를 붙일 수 있어</div>
+      <div class="onboarding-row"><span class="onboarding-num">3</span>노트의 🔗 버튼을 누르고 할일 버블을 클릭하면, 그 버블이 노트에 묶여서 근처를 맴돌아</div>
+      <button id="onboarding-close">시작할게</button>
+      <div id="onboarding-dismiss">다시 보지 않기</div>
+    </div>
+  </div>
+
+  <div id="counter">선택 0 / 3</div>
+  <button id="next-btn">Big 3 고르러 가기 →</button>
+
+  <div id="stage3">
+    <div class="head">오늘의 Big 3, 시간을 배정하자</div>
+    <div class="subhead" id="date-label"></div>
+    <div id="planner">
+      <div id="tray">
+        <div class="tray-label">등록할 캘린더</div>
+        <select id="cal-select"><option value="primary">공식 일정</option></select>
+        <div class="tray-label" style="margin-top:6px;">배정 안 됨 — 드래그해서 타임라인에 놓기</div>
+        <div id="tray-items"></div>
+      </div>
+      <div id="timeline-wrap">
+        <div id="timeline"></div>
+      </div>
+    </div>
+    <button id="confirm-btn" disabled>구글 캘린더에 반영하기</button>
+    <div id="sent-msg">
+      <div class="note" id="sent-note"></div>
+      <div class="msg-box" id="msg-box"></div>
+      <button id="copy-btn">문구 복사하기</button>
+    </div>
+    <button id="extra-btn">+ 추가로 할 일 배정하기</button>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  /* SYNC_EVENTS_START */
+  let todaysEvents = [];
+  /* SYNC_EVENTS_END */
+
+  const STORAGE_KEY = 'pending-bubbles';
+  const RANGE_START_MIN = 4*60; // display range starts at 04:00
+  const DAY_START = 0;
+  const DAY_END = 24*60; // full 24h span: 04:00 today -> 04:00 tomorrow
+  const TOP_PAD = 16; // breathing room so the first hour block doesn't sit flush against the rounded edge
+  const SNAP = 15;
+  const STALE_DAYS = 3;
+
+  let stage = 1;
+  let bubbles = [];
+  let selectedOrder = [];
+  let idCounter = 0;
+  let placements = {};
+  let selectionMode = 'big3'; // 'big3' (exactly 3) or 'extra' (1 or more)
+
+  let notes = [];
+  let noteIdCounter = 0;
+  let linkModeNoteId = null;
+
+  const bubbleLayer = document.getElementById('bubble-layer');
+  const input = document.getElementById('brain-input');
+  const nextBtn = document.getElementById('next-btn');
+  const counterEl = document.getElementById('counter');
+  const stageNum = document.getElementById('stage-num');
+  const greetingWrap = document.getElementById('greeting-wrap');
+  const inputWrap = document.getElementById('input-circle-wrap');
+  const hintText = document.getElementById('hint-text');
+  const instruction2 = document.getElementById('instruction-2');
+  const instr2Head = document.getElementById('instruction-2-head');
+  const instr2Sub = document.getElementById('instruction-2-sub');
+  const stage3 = document.getElementById('stage3');
+  const restartBtn = document.getElementById('restart');
+  const carryNote = document.getElementById('carry-note');
+  const backBtn = document.getElementById('back-btn');
+  const extraBtn = document.getElementById('extra-btn');
+
+  // ---------- Google Calendar OAuth ----------
+  const CLIENT_ID = '424662232399-0rubq90508i8a1e11bp59lg866o7gtas.apps.googleusercontent.com';
+  const SCOPES = 'https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/calendar.calendarlist.readonly https://www.googleapis.com/auth/drive.appdata';
+  let accessToken = null;
+  let tokenClient = null;
+  let selectedCalendarId = 'primary';
+  const connectBtn = document.getElementById('connect-btn');
+  const calSelect = document.getElementById('cal-select');
+  const loginGate = document.getElementById('login-gate');
+  const gateConnectBtn = document.getElementById('gate-connect-btn');
+  calSelect.addEventListener('change', (e)=>{ selectedCalendarId = e.target.value; });
+
+  async function loadCalendarList(){
+    try{
+      const res = await fetch('https://www.googleapis.com/calendar/v3/users/me/calendarList?minAccessRole=writer', { headers:{ Authorization:'Bearer '+accessToken } });
+      if(!res.ok) return;
+      const data = await res.json();
+      const items = (data.items||[]).filter(c=>!c.deleted);
+      items.sort((a,b)=> (b.primary?1:0) - (a.primary?1:0));
+      calSelect.innerHTML='';
+      items.forEach(c=>{
+        const opt = document.createElement('option');
+        opt.value = c.id;
+        opt.textContent = c.primary ? '공식 일정 (기본)' : c.summary;
+        calSelect.appendChild(opt);
+      });
+      if(items.length){ selectedCalendarId = items.find(c=>c.primary)?.id || items[0].id; calSelect.value = selectedCalendarId; }
+    }catch(e){ console.warn('캘린더 목록 불러오기 실패', e); }
+  }
+
+  // ---------- Drive appDataFolder: account-tied storage for pending bubbles ----------
+  const DRIVE_FILE_NAME = 'big3-pending.json';
+  let driveFileId = null;
+
+  async function findDriveFile(){
+    try{
+      const q = encodeURIComponent("name='"+DRIVE_FILE_NAME+"' and trashed=false");
+      const res = await fetch('https://www.googleapis.com/drive/v3/files?spaces=appDataFolder&q='+q+'&fields=files(id,name)', {
+        headers:{ Authorization:'Bearer '+accessToken }
+      });
+      if(!res.ok) return null;
+      const data = await res.json();
+      return (data.files && data.files[0]) ? data.files[0].id : null;
+    }catch(e){ return null; }
+  }
+
+  async function loadFromDrive(){
+    try{
+      driveFileId = await findDriveFile();
+      if(!driveFileId) return null;
+      const res = await fetch('https://www.googleapis.com/drive/v3/files/'+driveFileId+'?alt=media', {
+        headers:{ Authorization:'Bearer '+accessToken }
+      });
+      if(!res.ok) return null;
+      return await res.json();
+    }catch(e){ console.warn('Drive 불러오기 실패', e); return null; }
+  }
+
+  async function saveToDrive(list){
+    if(!accessToken) return;
+    try{
+      const content = JSON.stringify(list);
+      if(!driveFileId){ driveFileId = await findDriveFile(); }
+      if(driveFileId){
+        await fetch('https://www.googleapis.com/upload/drive/v3/files/'+driveFileId+'?uploadType=media', {
+          method:'PATCH',
+          headers:{ Authorization:'Bearer '+accessToken, 'Content-Type':'application/json' },
+          body: content
+        });
+      } else {
+        const boundary = 'big3boundary';
+        const metadata = { name: DRIVE_FILE_NAME, parents:['appDataFolder'] };
+        const body =
+          '--'+boundary+'\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n'+JSON.stringify(metadata)+'\r\n'+
+          '--'+boundary+'\r\nContent-Type: application/json\r\n\r\n'+content+'\r\n'+
+          '--'+boundary+'--';
+        const res = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+          method:'POST',
+          headers:{ Authorization:'Bearer '+accessToken, 'Content-Type':'multipart/related; boundary='+boundary },
+          body
+        });
+        const data = await res.json().catch(()=>({}));
+        if(data.id) driveFileId = data.id;
+      }
+    }catch(e){ console.warn('Drive 저장 실패', e); }
+  }
+
+  let hydrated = false;
+  async function hydrateBubbles(){
+    if(hydrated) return;
+    hydrated = true;
+    gateConnectBtn.textContent = '불러오는 중...';
+    gateConnectBtn.disabled = true;
+    let data = await loadFromDrive();
+    if(!data){
+      try{ const raw = localStorage.getItem(STORAGE_KEY); if(raw) data = JSON.parse(raw); }catch(e){}
+    }
+    let bubbleList = [], noteList = [];
+    if(Array.isArray(data)){ bubbleList = data; } // legacy format: bare bubble array
+    else if(data && typeof data==='object'){ bubbleList = data.bubbles||[]; noteList = data.notes||[]; }
+
+    if(bubbleList.length>0){
+      bubbleList.forEach(item=>addBubble(item.text, false, item.createdAt));
+      carryNote.textContent = `${bubbleList.length}개가 계속 떠 있어`;
+      carryNote.classList.add('show');
+      updateStage1Gate();
+    }
+    noteList.forEach(item=>createNote(item.text, item.createdAt, false, item.x, item.y));
+
+    loginGate.style.display = 'none';
+    maybeShowOnboarding();
+  }
+
+  function maybeShowOnboarding(){
+    try{ if(localStorage.getItem('onboarding-seen')==='1') return; }catch(e){}
+    document.getElementById('onboarding').classList.add('show');
+  }
+
+  function markConnected(){
+    connectBtn.textContent = '캘린더 연결됨 ✓';
+    connectBtn.classList.add('connected');
+    loadCalendarList();
+    hydrateBubbles();
+  }
+  function markDisconnected(){
+    connectBtn.textContent = '구글 캘린더 연결';
+    connectBtn.classList.remove('connected');
+    accessToken = null;
+    try{ localStorage.removeItem('gcal-token'); }catch(e){}
+    gateConnectBtn.textContent = 'Google로 시작하기';
+    gateConnectBtn.disabled = false;
+    loginGate.style.display = 'flex';
+  }
+  async function validateToken(token){
+    try{
+      const res = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary', { headers:{ Authorization:'Bearer '+token } });
+      return res.ok;
+    }catch(e){ return false; }
+  }
+  function initGoogleAuth(){
+    gateConnectBtn.textContent = 'Google로 시작하기';
+    gateConnectBtn.disabled = false;
+    tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: CLIENT_ID,
+      scope: SCOPES,
+      callback: (resp)=>{
+        if(resp.error){
+          console.warn('auth error', resp);
+          connectBtn.textContent='연결 실패 — 다시 시도';
+          gateConnectBtn.textContent = 'Google로 시작하기 (실패, 다시 시도)';
+          gateConnectBtn.disabled = false;
+          return;
+        }
+        accessToken = resp.access_token;
+        try{ localStorage.setItem('gcal-token', accessToken); }catch(e){}
+        markConnected();
+      }
+    });
+    const requestAuth = ()=>{
+      gateConnectBtn.textContent = '로그인 중...';
+      gateConnectBtn.disabled = true;
+      tokenClient.requestAccessToken({ prompt: 'consent' });
+    };
+    connectBtn.addEventListener('click', requestAuth);
+    gateConnectBtn.addEventListener('click', requestAuth);
+    (async ()=>{
+      try{
+        const saved = localStorage.getItem('gcal-token');
+        if(saved){
+          const valid = await validateToken(saved);
+          if(valid){ accessToken = saved; markConnected(); }
+          else { markDisconnected(); }
+        }
+      }catch(e){}
+    })();
+  }
+  function waitForGIS(retries){
+    if(window.google && google.accounts && google.accounts.oauth2){ initGoogleAuth(); }
+    else if(retries>0){ setTimeout(()=>waitForGIS(retries-1), 200); }
+    else{
+      connectBtn.textContent = 'Google 로그인 로드 실패';
+      gateConnectBtn.textContent = 'Google 로그인 로드 실패 — 새로고침해줘';
+      gateConnectBtn.disabled = true;
+    }
+  }
+
+  // ---------- greeting ----------
+  const now = new Date();
+  const greetText = 'Plan Your Day';
+  document.getElementById('greeting').textContent = greetText;
+  document.getElementById('date-label').textContent =
+    now.getFullYear()+'.'+String(now.getMonth()+1).padStart(2,'0')+'.'+String(now.getDate()).padStart(2,'0');
+
+  // hint-text only ever shows once, on the very first visit — then fades and never returns
+  (function(){
+    let seen = false;
+    try{ seen = localStorage.getItem('hint-seen')==='1'; }catch(e){}
+    if(seen){
+      hintText.style.transition = 'none';
+      hintText.style.opacity = '0';
+    } else {
+      setTimeout(()=>{ if(stage===1) hintText.style.opacity='0'; }, 3500);
+      try{ localStorage.setItem('hint-seen','1'); }catch(e){}
+    }
+  })();
+
+  input.focus();
+  input.addEventListener('keydown', (e)=>{
+    if(e.key==='Enter' && input.value.trim().length>0){
+      addBubble(input.value.trim(), true);
+      input.value='';
+      persistPending();
+    }
+  });
+
+  function persistPending(){
+    try{
+      const payload = {
+        bubbles: bubbles.map(b=>({text:b.text, createdAt:b.createdAt})),
+        notes: notes.map(n=>({text:n.text, createdAt:n.createdAt, x:n.x, y:n.y}))
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+      if(accessToken) saveToDrive(payload);
+    }catch(e){ console.warn('storage save failed', e); }
+  }
+
+  function addBubble(text, fromCenter, createdAt){
+    const id = 'b'+(idCounter++);
+    const created = createdAt || new Date().toISOString();
+    let cx, cy;
+    if(fromCenter){ cx = window.innerWidth/2; cy = window.innerHeight*0.34; }
+    else { cx = Math.random()*window.innerWidth; cy = 200 + Math.random()*(window.innerHeight-400); }
+    const angle = Math.random()*Math.PI*2;
+    const burstSpeed = 1.6 + Math.random()*0.8;
+
+    // bigger, more visible bubbles
+    const r = Math.max(58, Math.min(112, 48 + Math.sqrt(text.length)*10));
+    const fontSize = text.length>16 ? 13.5 : text.length>9 ? 14.5 : 16;
+
+    const daysOld = Math.floor((Date.now()-new Date(created).getTime())/86400000);
+    const isStale = daysOld >= STALE_DAYS;
+
+    const el = document.createElement('div');
+    el.className = 'bubble' + (isStale ? ' stale' : '');
+    el.style.width = (r*2)+'px';
+    el.style.height = (r*2)+'px';
+    el.style.fontSize = fontSize+'px';
+    el.style.display='flex'; el.style.alignItems='center'; el.style.justifyContent='center';
+    const textSpan = document.createElement('span');
+    textSpan.className = 'bubble-text';
+    textSpan.textContent = text;
+    el.appendChild(textSpan);
+    bubbleLayer.appendChild(el);
+
+    const bubbleObj = { id, text, el, textEl:textSpan, createdAt:created, x:cx, y:cy, vx:Math.cos(angle)*burstSpeed, vy:Math.sin(angle)*burstSpeed, r, selected:false, frozen:false, linkedNoteId:null };
+    bubbles.push(bubbleObj);
+    el.title = '클릭하면 멈춰서 수정하거나 지울 수 있어';
+    el.addEventListener('click', (e)=>{ e.stopPropagation(); handleBubbleClick(bubbleObj, e); });
+    updateStage1Gate();
+  }
+
+  function updateStage1Gate(){
+    if(stage===1){
+      if(bubbles.length>=3){ nextBtn.textContent='Big 3 고르러 가기 →'; nextBtn.classList.add('show'); }
+      else nextBtn.classList.remove('show');
+    }
+  }
+
+  const maxSpeed=0.34, damping=-0.62, topSafe=150, bottomSafe=90, decay=0.965;
+  const LEASH_RADIUS = 22;
+  const STANDOFF = 85; // how far above the note's corner the bubble hovers, like a tied balloon
+
+  function nearestCorner(rect, px, py){
+    const corners = [
+      {x:rect.left, y:rect.top}, {x:rect.right, y:rect.top},
+      {x:rect.left, y:rect.bottom}, {x:rect.right, y:rect.bottom}
+    ];
+    let best = corners[0], bestD = Infinity;
+    corners.forEach(c=>{
+      const d = Math.hypot(c.x-px, c.y-py);
+      if(d<bestD){ bestD=d; best=c; }
+    });
+    return best;
+  }
+
+  function tick(){
+    const cx = window.innerWidth/2;
+    const ccy = window.innerHeight*0.30;
+    const cRadius = Math.max(220, window.innerHeight*0.32);
+
+    bubbles.forEach(b=>{
+      if(b.frozen) return; // stays exactly where clicked
+      if(Math.random()<0.02){ b.vx += (Math.random()-0.5)*0.02; b.vy += (Math.random()-0.5)*0.02; }
+
+      let anchor = null; // the point physics keeps the bubble near (above the note's nearest corner)
+      if(b.linkedNoteId){
+        const note = notes.find(n=>n.id===b.linkedNoteId);
+        if(note && note.cardEl){
+          const rect = note.cardEl.getBoundingClientRect();
+          const corner = nearestCorner(rect, b.x, b.y);
+          anchor = { x: corner.x, y: corner.y - STANDOFF };
+          const dx = anchor.x-b.x, dy = anchor.y-b.y, dist = Math.hypot(dx,dy)||0.0001;
+          if(dist > LEASH_RADIUS){
+            const pull = Math.min(dist, 300)*0.045;
+            b.vx += (dx/dist)*pull;
+            b.vy += (dy/dist)*pull;
+          }
+          if(dist < 100){ b.vx *= 0.9; b.vy *= 0.9; } // only settle-damp once it's actually arrived
+        }
+      }
+
+      const capSpeed = maxSpeed;
+      const speed = Math.hypot(b.vx,b.vy);
+      if(speed>capSpeed){ b.vx *= decay; b.vy *= decay; }
+
+      b.x += b.vx; b.y += b.vy;
+      const w=window.innerWidth, h=window.innerHeight;
+      if(b.x-b.r<0){ b.x=b.r; b.vx*=damping; }
+      if(b.x+b.r>w){ b.x=w-b.r; b.vx*=damping; }
+      if(b.y-b.r<topSafe){ b.y=topSafe+b.r; b.vy*=damping; }
+      if(b.y+b.r>h-bottomSafe){ b.y=h-bottomSafe-b.r; b.vy*=damping; }
+
+      if(anchor){
+        // hard safety cap so it can never actually stray far, even under jitter buildup
+        const dx=b.x-anchor.x, dy=b.y-anchor.y, dist=Math.hypot(dx,dy);
+        const hardCap = LEASH_RADIUS*2.5;
+        if(dist>hardCap){ const k=hardCap/dist; b.x=anchor.x+dx*k; b.y=anchor.y+dy*k; }
+      } else {
+        // keep clear of the central greeting/input text column
+        const cdx=b.x-cx, cdy=b.y-ccy, cdist=Math.hypot(cdx,cdy);
+        if(cdist>2 && cdist<cRadius){
+          const push=(cRadius-cdist)*0.012;
+          b.vx += (cdx/cdist)*push;
+          b.vy += (cdy/cdist)*push;
+        }
+      }
+
+      b.el.style.transform = `translate(${b.x-b.r}px, ${b.y-b.r}px)`;
+    });
+    drawTethers();
+    if(stage!==3) requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+
+  // ---------- selection ----------
+  function maxForMode(){ return selectionMode==='big3' ? 3 : 8; }
+
+  function handleBubbleClick(b, e){
+    if(e && e.target && e.target.tagName==='INPUT') return; // editing in progress, don't toggle
+    if(linkModeNoteId){ linkBubbleToNote(b, linkModeNoteId); return; }
+    if(stage!==1){ toggleSelect(b); return; }
+    if(b.frozen){ unfreezeBubble(b); } else { freezeBubble(b); }
+  }
+
+  function addFreezeControls(b){
+    b.el.querySelectorAll('.bubble-action').forEach(o=>o.remove());
+    const delBtn = document.createElement('div');
+    delBtn.className='bubble-action delete';
+    delBtn.textContent='✕';
+    delBtn.addEventListener('click', (e)=>{ e.stopPropagation(); removeBubble(b); });
+    const editBtn = document.createElement('div');
+    editBtn.className='bubble-action edit';
+    editBtn.textContent='✎';
+    editBtn.addEventListener('click', (e)=>{ e.stopPropagation(); startEdit(b); });
+    b.el.appendChild(delBtn);
+    b.el.appendChild(editBtn);
+    if(b.linkedNoteId){
+      const unlinkBtn = document.createElement('div');
+      unlinkBtn.className='bubble-action unlink';
+      unlinkBtn.textContent='🔗';
+      unlinkBtn.title='노트 연결 끊기';
+      unlinkBtn.addEventListener('click', (e)=>{ e.stopPropagation(); unlinkBubble(b); });
+      b.el.appendChild(unlinkBtn);
+    }
+  }
+
+  function freezeBubble(b){
+    if(b.frozen) return;
+    b.frozen = true;
+    b.el.classList.add('frozen');
+    addFreezeControls(b);
+  }
+
+  function unfreezeBubble(b){
+    b.frozen = false;
+    b.el.classList.remove('frozen');
+    b.el.querySelectorAll('.bubble-action').forEach(o=>o.remove());
+  }
+
+  function startEdit(b){
+    b.textEl.style.display = 'none';
+    const inputEl = document.createElement('input');
+    inputEl.type = 'text';
+    inputEl.className = 'bubble-edit-input';
+    inputEl.value = b.text;
+    b.el.appendChild(inputEl);
+    inputEl.focus();
+    inputEl.select();
+
+    function commit(){
+      const newText = inputEl.value.trim();
+      if(newText) b.text = newText;
+      b.textEl.textContent = b.text;
+      b.textEl.style.display = '';
+      inputEl.remove();
+      addFreezeControls(b);
+      persistPending();
+    }
+    inputEl.addEventListener('keydown', (e)=>{
+      if(e.key==='Enter'){ inputEl.blur(); }
+      else if(e.key==='Escape'){ inputEl.value=b.text; inputEl.blur(); }
+    });
+    inputEl.addEventListener('blur', commit);
+  }
+
+  function removeBubble(b){
+    bubbles = bubbles.filter(x=>x.id!==b.id); // stop physics updates on it immediately
+    b.el.style.opacity = '0';
+    setTimeout(()=>{ b.el.remove(); }, 500);
+    // if a note was tethered to this bubble, release it
+    const linkedNote = notes.find(n=>n.linkedBubbleId===b.id);
+    if(linkedNote){ linkedNote.linkedBubbleId=null; renderNoteCard(linkedNote); }
+    persistPending();
+    updateStage1Gate();
+  }
+
+  // ---------- note wall (free placement) ----------
+  const noteLayer = document.getElementById('note-layer');
+  const linkBanner = document.getElementById('link-banner');
+  const noteModal = document.getElementById('note-modal');
+  const noteModalText = document.getElementById('note-modal-text');
+  const appEl = document.getElementById('app');
+  let pendingPromptEl = null;
+
+  function clearPendingPrompt(){
+    if(pendingPromptEl){ pendingPromptEl.remove(); pendingPromptEl=null; }
+  }
+
+  // right-click on genuinely empty canvas (not a bubble, not a note, not a UI control)
+  // shows a small "+" right there; clicking that creates a note pinned to that spot
+  appEl.addEventListener('contextmenu', (e)=>{
+    if(stage!==1) return;
+    if(linkModeNoteId) return;
+    if(e.target !== appEl) return; // anything else (bubble, note, button) already claimed the click
+    e.preventDefault(); // suppress the browser's native right-click menu
+    clearPendingPrompt();
+    const x = e.clientX, y = e.clientY;
+    const btn = document.createElement('button');
+    btn.className = 'note-add-prompt';
+    btn.textContent = '+';
+    btn.style.left = x+'px';
+    btn.style.top = y+'px';
+    btn.addEventListener('click', (ev)=>{
+      ev.stopPropagation();
+      createNote('', new Date().toISOString(), true, x, y);
+      clearPendingPrompt();
+    });
+    document.body.appendChild(btn);
+    pendingPromptEl = btn;
+  });
+  // any ordinary left click elsewhere dismisses a pending prompt that wasn't used
+  appEl.addEventListener('click', (e)=>{ if(e.target===appEl) clearPendingPrompt(); });
+
+  function createNote(text, createdAt, startEditing, x, y){
+    const id = 'n'+(noteIdCounter++);
+    const note = {
+      id, text: text||'', createdAt: createdAt||new Date().toISOString(),
+      linkedBubbleId:null, cardEl:null,
+      x: (x!=null) ? x : 120+Math.random()*160,
+      y: (y!=null) ? y : 220+Math.random()*160
+    };
+    notes.push(note);
+    renderNoteCard(note);
+    if(startEditing) openNoteModal(note, true);
+    persistPending();
+    return note;
+  }
+
+  function renderNoteCard(note){
+    if(!note.cardEl){
+      note.cardEl = document.createElement('div');
+      note.cardEl.className = 'note-card';
+      note.cardEl.addEventListener('click', (e)=>e.stopPropagation());
+      noteLayer.appendChild(note.cardEl);
+    }
+    const card = note.cardEl;
+    card.style.left = Math.max(8, note.x-75)+'px';
+    card.style.top = Math.max(8, note.y-32)+'px';
+    card.classList.toggle('linked', !!note.linkedBubbleId);
+    card.innerHTML = `
+      <div class="note-preview">${escapeHtml(note.text) || '<span style="opacity:.4;">빈 노트 — 눌러서 적기</span>'}</div>
+      <div class="note-actions">
+        <button class="note-link-btn" title="할일과 연결">🔗</button>
+        <button class="note-del-btn" title="삭제">✕</button>
+      </div>
+    `;
+    card.querySelector('.note-preview').addEventListener('click', (e)=>{ e.stopPropagation(); openNoteModal(note, false); });
+    card.querySelector('.note-link-btn').addEventListener('click', (e)=>{ e.stopPropagation(); toggleNoteLink(note); });
+    card.querySelector('.note-del-btn').addEventListener('click', (e)=>{ e.stopPropagation(); deleteNote(note); });
+  }
+
+  function deleteNote(note){
+    if(note.linkedBubbleId){
+      const b = bubbles.find(x=>x.id===note.linkedBubbleId);
+      if(b) b.linkedNoteId = null;
+    }
+    if(note.cardEl) note.cardEl.remove();
+    notes = notes.filter(n=>n.id!==note.id);
+    if(linkModeNoteId===note.id) exitLinkMode();
+    persistPending();
+  }
+
+  function toggleNoteLink(note){
+    if(note.linkedBubbleId){
+      const b = bubbles.find(x=>x.id===note.linkedBubbleId);
+      if(b) b.linkedNoteId = null;
+      note.linkedBubbleId = null;
+      renderNoteCard(note);
+      persistPending();
+    } else {
+      linkModeNoteId = note.id;
+      linkBanner.classList.add('show');
+    }
+  }
+
+  function exitLinkMode(){
+    linkModeNoteId = null;
+    linkBanner.classList.remove('show');
+  }
+  document.getElementById('link-cancel').addEventListener('click', exitLinkMode);
+
+  function linkBubbleToNote(b, noteId){
+    const note = notes.find(n=>n.id===noteId);
+    if(!note) { exitLinkMode(); return; }
+    // release any previous link on this note or this bubble
+    if(note.linkedBubbleId){
+      const prev = bubbles.find(x=>x.id===note.linkedBubbleId);
+      if(prev) prev.linkedNoteId = null;
+    }
+    if(b.linkedNoteId){
+      const prevNote = notes.find(n=>n.id===b.linkedNoteId);
+      if(prevNote){ prevNote.linkedBubbleId=null; renderNoteCard(prevNote); }
+    }
+    note.linkedBubbleId = b.id;
+    b.linkedNoteId = note.id;
+    renderNoteCard(note);
+    if(b.frozen) addFreezeControls(b); // refresh so the unlink button appears
+    exitLinkMode();
+  }
+
+  function unlinkBubble(b){
+    if(!b.linkedNoteId) return;
+    const note = notes.find(n=>n.id===b.linkedNoteId);
+    if(note){ note.linkedBubbleId=null; renderNoteCard(note); }
+    b.linkedNoteId = null;
+    addFreezeControls(b);
+  }
+
+  function openNoteModal(note, focusForEdit){
+    noteModalText.value = note.text;
+    noteModal.classList.add('show');
+    noteModal.dataset.noteId = note.id;
+    if(focusForEdit){ setTimeout(()=>noteModalText.focus(), 50); }
+  }
+  function closeNoteModal(){
+    const note = notes.find(n=>n.id===noteModal.dataset.noteId);
+    if(note){
+      note.text = noteModalText.value.trim();
+      renderNoteCard(note);
+      persistPending();
+    }
+    noteModal.classList.remove('show');
+  }
+  document.getElementById('note-modal-close').addEventListener('click', closeNoteModal);
+
+  // ---------- tether line drawing ----------
+  const tetherSvg = document.getElementById('tether-svg');
+  function drawTethers(){
+    tetherSvg.innerHTML = '';
+    bubbles.forEach(b=>{
+      if(!b.linkedNoteId) return;
+      const note = notes.find(n=>n.id===b.linkedNoteId);
+      if(!note || !note.cardEl) return;
+      const rect = note.cardEl.getBoundingClientRect();
+      const corner = nearestCorner(rect, b.x, b.y);
+      const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+      line.setAttribute('x1', corner.x); line.setAttribute('y1', corner.y);
+      line.setAttribute('x2', b.x); line.setAttribute('y2', b.y + b.r); // string trails from the bubble's bottom, like a balloon
+      line.setAttribute('stroke', '#0b6fe0');
+      line.setAttribute('stroke-width', '1.5');
+      line.setAttribute('stroke-opacity', '0.55');
+      tetherSvg.appendChild(line);
+    });
+  }
+
+  // ---------- onboarding ----------
+  document.getElementById('onboarding-close').addEventListener('click', ()=>{
+    document.getElementById('onboarding').classList.remove('show');
+  });
+  document.getElementById('onboarding-dismiss').addEventListener('click', ()=>{
+    document.getElementById('onboarding').classList.remove('show');
+    try{ localStorage.setItem('onboarding-seen','1'); }catch(e){}
+  });
+
+  function toggleSelect(b){
+    if(stage===1) return; // selection only meaningful once past stage 1 view, but keep silent no-op
+    if(!b.selected && selectedOrder.length>=maxForMode()) return;
+    b.selected = !b.selected;
+    if(b.selected){
+      selectedOrder.push(b.id);
+      b.el.classList.add('selected');
+      const badge=document.createElement('div'); badge.className='badge'; badge.textContent=selectedOrder.length;
+      b.el.appendChild(badge);
+    } else {
+      selectedOrder = selectedOrder.filter(id=>id!==b.id);
+      b.el.classList.remove('selected');
+      const badge=b.el.querySelector('.badge'); if(badge) badge.remove();
+      delete placements[b.id];
+      selectedOrder.forEach((id,i)=>{ const bb=bubbles.find(x=>x.id===id); const bd=bb.el.querySelector('.badge'); if(bd) bd.textContent=i+1; });
+    }
+    updateSelectionUI();
+  }
+
+  function updateSelectionUI(){
+    if(selectionMode==='big3'){
+      counterEl.textContent = `선택 ${selectedOrder.length} / 3`;
+      if(selectedOrder.length===3){ nextBtn.textContent='시간 배정하기 →'; nextBtn.classList.add('show'); }
+      else nextBtn.classList.remove('show');
+    } else {
+      counterEl.textContent = `선택 ${selectedOrder.length}개`;
+      if(selectedOrder.length>=1){ nextBtn.textContent='시간 배정하기 →'; nextBtn.classList.add('show'); }
+      else nextBtn.classList.remove('show');
+    }
+  }
+
+  // ---------- stage transitions ----------
+  nextBtn.addEventListener('click', async ()=>{
+    if(stage===1 && bubbles.length>=3) goToStage2();
+    else if(stage===2){
+      const need = selectionMode==='big3' ? selectedOrder.length===3 : selectedOrder.length>=1;
+      if(need) await goToStage3();
+    }
+  });
+
+  function goToStage2(){
+    clearPendingPrompt();
+    bubbles.forEach(b=>{ if(b.frozen) unfreezeBubble(b); });
+    stage=2; stageNum.textContent='2';
+    selectionMode='big3';
+    greetingWrap.classList.add('fade-out');
+    inputWrap.classList.add('fade-out');
+    hintText.style.opacity='0';
+    instr2Head.textContent = '이 중에서, 진짜 중요한 세 가지만.';
+    instr2Sub.textContent = '버블을 눌러서 골라줘';
+    instruction2.classList.add('active');
+    nextBtn.classList.remove('show');
+    counterEl.classList.add('show');
+    updateSelectionUI();
+    backBtn.textContent = '← 브레인덤프로';
+    backBtn.onclick = goBackToStage1;
+    backBtn.classList.add('show');
+  }
+
+  function goBackToStage1(){
+    stage=1; stageNum.textContent='1';
+    greetingWrap.classList.remove('fade-out');
+    inputWrap.classList.remove('fade-out');
+    instruction2.classList.remove('active');
+    counterEl.classList.remove('show');
+    backBtn.classList.remove('show');
+    updateStage1Gate();
+    input.focus();
+  }
+
+  async function goToStage3(){
+    stage=3; stageNum.textContent='3';
+    instruction2.classList.remove('active');
+    counterEl.classList.remove('show');
+    nextBtn.classList.remove('show');
+    bubbleLayer.style.transition='opacity .5s ease';
+    bubbleLayer.style.opacity='0';
+    noteLayer.style.opacity='0';
+    setTimeout(()=>{ if(stage===3){ bubbleLayer.style.display='none'; noteLayer.style.display='none'; } }, 500);
+    await fetchTodaysEvents();
+    buildTimeline();
+    stage3.classList.add('active');
+    backBtn.textContent = '← Big 3로';
+    backBtn.onclick = goBackToStage2;
+    backBtn.classList.add('show');
+    extraBtn.classList.remove('show');
+    document.getElementById('sent-msg').classList.remove('show');
+  }
+
+  function goBackToStage2(){
+    stage=2; stageNum.textContent='2';
+    stage3.classList.remove('active');
+    bubbleLayer.style.display='block';
+    noteLayer.style.display='block';
+    requestAnimationFrame(()=>{ bubbleLayer.style.opacity='1'; noteLayer.style.opacity='1'; });
+    requestAnimationFrame(tick);
+    instr2Head.textContent = selectionMode==='big3' ? '이 중에서, 진짜 중요한 세 가지만.' : '추가로, 오늘 배정할 것들을 골라줘';
+    instr2Sub.textContent = '버블을 눌러서 골라줘';
+    instruction2.classList.add('active');
+    counterEl.classList.add('show');
+    updateSelectionUI();
+    backBtn.textContent = '← 브레인덤프로';
+    backBtn.onclick = goBackToStage1;
+  }
+
+  function startExtraRound(){
+    selectionMode='extra';
+    selectedOrder = [];
+    // clear any lingering selected styling from finished items (they're already removed from bubbles anyway)
+    bubbles.forEach(b=>{
+      if(b.selected){ b.selected=false; b.el.classList.remove('selected'); const bd=b.el.querySelector('.badge'); if(bd) bd.remove(); }
+    });
+    goBackToStage2();
+  }
+  extraBtn.addEventListener('click', startExtraRound);
+
+  // ---------- stage 3: timeline ----------
+  const timelineEl = document.getElementById('timeline');
+  const timelineWrap = document.getElementById('timeline-wrap');
+  const trayItemsEl = document.getElementById('tray-items');
+  const confirmBtn = document.getElementById('confirm-btn');
+
+  function minToLabel(offsetMin){
+    const total = ((RANGE_START_MIN + offsetMin) % 1440 + 1440) % 1440;
+    const h = Math.floor(total/60), mm = total%60;
+    return String(h).padStart(2,'0')+':'+String(mm).padStart(2,'0');
+  }
+  function pad2(n){ return String(n).padStart(2,'0'); }
+
+  async function fetchTodaysEvents(){
+    if(!accessToken){ todaysEvents = []; return; }
+    const now = new Date();
+    const rangeStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 4, 0, 0);
+    const rangeEnd = new Date(rangeStart.getTime() + 24*60*60000); // 04:00 today -> 04:00 tomorrow
+    const calIds = Array.from(new Set(['primary', selectedCalendarId]));
+    try{
+      let allItems = [];
+      for(const calId of calIds){
+        const url = 'https://www.googleapis.com/calendar/v3/calendars/'+encodeURIComponent(calId)+'/events'
+          + '?timeMin='+encodeURIComponent(rangeStart.toISOString())
+          + '&timeMax='+encodeURIComponent(rangeEnd.toISOString())
+          + '&singleEvents=true&orderBy=startTime';
+        const res = await fetch(url, { headers:{ Authorization:'Bearer '+accessToken } });
+        if(res.status===401){ markDisconnected(); throw new Error('토큰 만료'); }
+        if(!res.ok) continue; // skip calendars we can't read, don't fail the whole fetch
+        const data = await res.json();
+        allItems = allItems.concat(data.items||[]);
+      }
+      todaysEvents = allItems.map(ev=>{
+        if(ev.start && ev.start.date && !ev.start.dateTime){
+          return { title: ev.summary || '(제목 없음)', allDay:true };
+        }
+        const s = new Date(ev.start.dateTime), e = new Date(ev.end.dateTime);
+        const offsetStart = Math.round((s.getTime()-rangeStart.getTime())/60000);
+        const offsetEnd = Math.round((e.getTime()-rangeStart.getTime())/60000);
+        return {
+          title: ev.summary || '(제목 없음)',
+          offsetStart, offsetEnd,
+          start: pad2(s.getHours())+':'+pad2(s.getMinutes()), end: pad2(e.getHours())+':'+pad2(e.getMinutes())
+        };
+      });
+    }catch(e){
+      console.warn('오늘 일정 불러오기 실패', e);
+      todaysEvents = [];
+    }
+  }
+
+  function buildTimeline(){
+    const totalMin = DAY_END - DAY_START;
+    const pxPerMin = 1.05;
+    const allDayCount = todaysEvents.filter(e=>e.allDay).length;
+    timelineEl.style.height = (totalMin*pxPerMin + TOP_PAD + (allDayCount?26:0) + 20)+'px';
+    timelineEl.innerHTML='';
+
+    const allDay = todaysEvents.filter(e=>e.allDay);
+    if(allDay.length){
+      const chipWrap = document.createElement('div');
+      chipWrap.style.position='absolute'; chipWrap.style.top=TOP_PAD+'px'; chipWrap.style.left='56px'; chipWrap.style.right='10px';
+      chipWrap.style.display='flex'; chipWrap.style.gap='6px'; chipWrap.style.flexWrap='wrap';
+      allDay.forEach(e=>{
+        const chip=document.createElement('div');
+        chip.textContent='📌 '+e.title;
+        chip.style.fontSize='10.5px'; chip.style.color='var(--ink-dim)';
+        chip.style.background='rgba(79,167,224,0.10)'; chip.style.border='1px solid var(--bubble-border)';
+        chip.style.borderRadius='999px'; chip.style.padding='3px 10px';
+        chipWrap.appendChild(chip);
+      });
+      timelineEl.appendChild(chipWrap);
+    }
+
+    const yOffset = TOP_PAD + (allDay.length?26:0);
+
+    for(let m=DAY_START; m<=DAY_END; m+=60){
+      const top = (m-DAY_START)*pxPerMin + yOffset;
+      const line=document.createElement('div'); line.className='hour-line'; line.style.top=top+'px';
+      timelineEl.appendChild(line);
+      const label=document.createElement('div'); label.className='hour-label'; label.style.top=top+'px'; label.textContent=minToLabel(m);
+      timelineEl.appendChild(label);
+    }
+
+    todaysEvents.filter(e=>!e.allDay).forEach(e=>{
+      const block=document.createElement('div'); block.className='busy-block';
+      block.style.top=((e.offsetStart-DAY_START)*pxPerMin+yOffset)+'px';
+      block.style.height=Math.max(18,(e.offsetEnd-e.offsetStart)*pxPerMin)+'px';
+      block.textContent=e.title+' · '+e.start+'~'+e.end;
+      timelineEl.appendChild(block);
+    });
+
+    trayItemsEl.innerHTML='';
+    selectedOrder.forEach((id,i)=>{
+      const b = bubbles.find(x=>x.id===id);
+      const item = document.createElement('div');
+      item.className='tray-item';
+      item.dataset.id = id;
+      item.innerHTML = `<span class="num">${i+1}</span>${escapeHtml(b.text)}`;
+      trayItemsEl.appendChild(item);
+      makeDraggable(item, id, b.text, i+1);
+    });
+
+    updateConfirmState();
+  }
+
+  function escapeHtml(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+
+  function makeDraggable(sourceEl, id, text, num){
+    let placedEl = null;
+    sourceEl.addEventListener('pointerdown', startDrag);
+
+    function startDrag(e){
+      e.preventDefault();
+      const originEl = placedEl || sourceEl;
+      const rect = originEl.getBoundingClientRect();
+      const offsetY = e.clientY - rect.top;
+
+      const dragGhost = document.createElement('div');
+      dragGhost.textContent = num+'. '+text;
+      dragGhost.style.position='fixed';
+      dragGhost.style.left = rect.left+'px';
+      dragGhost.style.top = rect.top+'px';
+      dragGhost.style.width = rect.width+'px';
+      dragGhost.style.padding='8px 12px';
+      dragGhost.style.background='rgba(79,167,224,0.95)';
+      dragGhost.style.color='#ffffff';
+      dragGhost.style.borderRadius='10px';
+      dragGhost.style.fontSize='12px';
+      dragGhost.style.zIndex='999';
+      dragGhost.style.pointerEvents='none';
+      document.body.appendChild(dragGhost);
+
+      function move(ev){
+        dragGhost.style.left = (ev.clientX - rect.width/2)+'px';
+        dragGhost.style.top = (ev.clientY - offsetY)+'px';
+      }
+      function up(ev){
+        document.removeEventListener('pointermove', move);
+        document.removeEventListener('pointerup', up);
+        const tlRect = timelineWrap.getBoundingClientRect();
+        if(ev.clientX>=tlRect.left && ev.clientX<=tlRect.right && ev.clientY>=tlRect.top && ev.clientY<=tlRect.bottom){
+          const scrollTop = timelineWrap.scrollTop;
+          const relY = ev.clientY - tlRect.top + scrollTop - 40;
+          const pxPerMin = 1.05;
+          let startMin = DAY_START + Math.round(relY/pxPerMin/SNAP)*SNAP;
+          startMin = Math.max(DAY_START, Math.min(DAY_END-30, startMin));
+          const dur = (placements[id] && placements[id].durMin) || 60;
+          placements[id] = { startMin, durMin: dur };
+          renderPlacedBlock(id, text, num);
+          sourceEl.classList.add('placed');
+        } else {
+          delete placements[id];
+          if(placedEl){ placedEl.remove(); placedEl=null; }
+          sourceEl.classList.remove('placed');
+        }
+        dragGhost.remove();
+        updateConfirmState();
+      }
+      document.addEventListener('pointermove', move);
+      document.addEventListener('pointerup', up);
+    }
+
+    function renderPlacedBlock(id, text, num){
+      if(placedEl) placedEl.remove();
+      const p = placements[id];
+      const pxPerMin = 1.05;
+      const yOffset = TOP_PAD + (todaysEvents.some(e=>e.allDay) ? 26 : 0);
+      placedEl = document.createElement('div');
+      placedEl.className='placed-block';
+      placedEl.style.top = ((p.startMin-DAY_START)*pxPerMin + yOffset)+'px';
+      placedEl.style.height = (p.durMin*pxPerMin)+'px';
+      placedEl.innerHTML = `
+        <div class="title">${num}. ${escapeHtml(text)}</div>
+        <div class="time">${minToLabel(p.startMin)}~${minToLabel(p.startMin+p.durMin)}</div>
+        <div class="dur-controls">
+          <button class="dur-btn" data-act="minus">−</button>
+          <button class="dur-btn" data-act="plus">+</button>
+        </div>
+      `;
+      timelineEl.appendChild(placedEl);
+      placedEl.addEventListener('pointerdown', (e)=>{
+        if(e.target.classList.contains('dur-btn')) return;
+        startDrag(e);
+      });
+      placedEl.querySelector('[data-act="plus"]').addEventListener('click', ()=>{
+        placements[id].durMin = Math.min(240, placements[id].durMin+15);
+        renderPlacedBlock(id, text, num);
+      });
+      placedEl.querySelector('[data-act="minus"]').addEventListener('click', ()=>{
+        placements[id].durMin = Math.max(15, placements[id].durMin-15);
+        renderPlacedBlock(id, text, num);
+      });
+    }
+
+    // restore an existing placement (e.g., when navigating back and forth) without requiring re-drag
+    if(placements[id]){
+      sourceEl.classList.add('placed');
+      renderPlacedBlock(id, text, num);
+    }
+  }
+
+  function updateConfirmState(){
+    const allPlaced = selectedOrder.every(id=>placements[id]);
+    confirmBtn.disabled = !allPlaced;
+  }
+
+  confirmBtn.addEventListener('click', async ()=>{
+    if(confirmBtn.disabled) return;
+
+    if(!accessToken){
+      document.getElementById('sent-note').textContent = '먼저 왼쪽 위 "구글 캘린더 연결"을 눌러서 로그인해줘';
+      document.getElementById('msg-box').textContent = '';
+      document.getElementById('sent-msg').classList.add('show');
+      return;
+    }
+
+    confirmBtn.disabled = true;
+    confirmBtn.textContent = '등록 중...';
+
+    const ids = selectedOrder.slice();
+    const items = ids.map(id=>{
+      const b = bubbles.find(x=>x.id===id);
+      const p = placements[id];
+      return (b && p) ? {id, b, p} : null;
+    }).filter(Boolean);
+
+    const today = new Date();
+    const rangeStartDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 4, 0, 0);
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const results = [];
+
+    for(const {b,p} of items){
+      const start = new Date(rangeStartDate.getTime() + p.startMin*60000);
+      const end = new Date(start.getTime() + p.durMin*60000);
+      const body = {
+        summary: b.text,
+        start: { dateTime: start.toISOString(), timeZone: tz },
+        end: { dateTime: end.toISOString(), timeZone: tz }
+      };
+      try{
+        const res = await fetch('https://www.googleapis.com/calendar/v3/calendars/'+encodeURIComponent(selectedCalendarId)+'/events', {
+          method:'POST',
+          headers:{ 'Authorization':'Bearer '+accessToken, 'Content-Type':'application/json' },
+          body: JSON.stringify(body)
+        });
+        if(!res.ok){
+          const errData = await res.json().catch(()=>({}));
+          throw new Error(errData.error?.message || ('status '+res.status));
+        }
+        results.push({ ok:true, title:b.text, time: minToLabel(p.startMin)+'~'+minToLabel(p.startMin+p.durMin) });
+      }catch(e){
+        results.push({ ok:false, title:b.text, error:e.message });
+      }
+    }
+
+    const doneIds = items.map(it=>it.id);
+    bubbles = bubbles.filter(bb=>!doneIds.includes(bb.id));
+    doneIds.forEach(id=>{ delete placements[id]; });
+    selectedOrder = selectedOrder.filter(id=>!doneIds.includes(id));
+    persistPending();
+
+    const okCount = results.filter(r=>r.ok).length;
+    document.getElementById('msg-box').textContent = results.map(r =>
+      r.ok ? `✓ ${r.title} (${r.time})` : `✗ ${r.title} — 실패: ${r.error}`
+    ).join('\n');
+    document.getElementById('sent-note').textContent = okCount===results.length
+      ? '캘린더에 모두 등록했어'
+      : `${okCount}/${results.length}개만 등록됐어 — 아래에서 실패한 항목 확인`;
+    document.getElementById('sent-msg').classList.add('show');
+    confirmBtn.textContent = '구글 캘린더에 반영하기';
+
+    if(okCount < results.length){
+      confirmBtn.disabled = false;
+    } else if(bubbles.length > 0){
+      extraBtn.classList.add('show');
+    }
+  });
+
+  document.getElementById('copy-btn').addEventListener('click', ()=>{
+    const text = document.getElementById('msg-box').textContent;
+    const btn = document.getElementById('copy-btn');
+    navigator.clipboard.writeText(text).then(()=>{
+      btn.textContent='복사됨 ✓'; btn.classList.add('copied');
+      setTimeout(()=>{ btn.textContent='문구 복사하기'; btn.classList.remove('copied'); }, 2000);
+    }).catch(()=>{
+      btn.textContent='복사 실패 — 직접 드래그해서 복사해줘';
+    });
+  });
+
+  restartBtn.addEventListener('click', ()=>{
+    // "처음부터" only resets the current in-progress selection/timeline —
+    // it must NOT delete brainstormed bubbles or their saved storage.
+    selectedOrder.forEach(id=>{
+      const b = bubbles.find(x=>x.id===id);
+      if(b){ b.selected=false; b.el.classList.remove('selected'); const bd=b.el.querySelector('.badge'); if(bd) bd.remove(); }
+    });
+    selectedOrder=[]; placements={}; selectionMode='big3';
+    stage=1; stageNum.textContent='1';
+    greetingWrap.classList.remove('fade-out');
+    inputWrap.classList.remove('fade-out');
+    instruction2.classList.remove('active');
+    stage3.classList.remove('active');
+    bubbleLayer.style.display='block';
+    bubbleLayer.style.opacity='1';
+    noteLayer.style.display='block';
+    noteLayer.style.opacity='1';
+    nextBtn.classList.remove('show');
+    counterEl.classList.remove('show');
+    counterEl.textContent='선택 0 / 3';
+    backBtn.classList.remove('show');
+    extraBtn.classList.remove('show');
+    document.getElementById('sent-msg').classList.remove('show');
+    input.value=''; input.focus();
+    requestAnimationFrame(tick);
+    updateStage1Gate();
+  });
+
+  waitForGIS(25);
+})();
+</script>
+</body>
+</html>
